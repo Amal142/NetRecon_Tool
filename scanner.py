@@ -1,14 +1,25 @@
-import socket
+import threading
+from scapy.all import IP, TCP, sr1
 
-target = input("Enter IP: ")
+# Scan a single port
+def scan_port(ip, port):
+    packet = IP(dst=ip)/TCP(dport=port, flags="S")
+    response = sr1(packet, timeout=1, verbose=0)
 
-for port in [21, 22, 80, 443]:
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(1)
-    
-    result = s.connect_ex((target, port))
-    
-    if result == 0:
-        print(f"Port {port} is OPEN")
-    
-    s.close()
+    if response and response.haslayer(TCP):
+        if response[TCP].flags == 18:  # SYN-ACK → OPEN
+            print(f"   [OPEN] Port {port}")
+
+
+# Scan multiple ports using threads
+def scan_ports(ip, ports):
+    print(f"\n[+] Scanning ports for {ip}...")
+
+    threads = []
+    for port in ports:
+        t = threading.Thread(target=scan_port, args=(ip, port))
+        threads.append(t)
+        t.start()
+
+    for t in threads:
+        t.join()

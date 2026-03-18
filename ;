@@ -1,0 +1,24 @@
+import socket
+
+target = input("Enter IP: ")
+
+ports = {
+    21: "FTP",
+    22: "SSH",
+    80: "HTTP",
+    443: "HTTPS"
+}
+
+print("==== Simple Network Scanner ====")
+
+for port in ports:
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(1)
+
+    result = s.connect_ex((target, port))
+
+    if result == 0:
+        service = ports[port]
+        print(f"[OPEN] Port {port} ({service})")
+
+    s.close()
